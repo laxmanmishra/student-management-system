@@ -1,0 +1,12 @@
+[mcp_servers.laravel-boost]
+command = "php"
+args = ["artisan", "boost:mcp"]
+cwd = "C:\\projects\\LaravelProjects\\student-management-system"
+
+[mcp_servers.herd]
+command = "php"
+args = ["C:/Users/laxman/.config/herd/bin/herd-mcp.phar"]
+cwd = "C:\\projects\\LaravelProjects\\student-management-system"
+
+[mcp_servers.herd.env]
+SITE_PATH = "C:\\projects\\LaravelProjects\\student-management-system"
