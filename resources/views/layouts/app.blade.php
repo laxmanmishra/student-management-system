@@ -27,7 +27,7 @@
      <!-- ===== Page Wrapper End ===== -->
 
      <!-- BEGIN MODAL -->
-    @if($page == 'Profile')
+    @if(($page ?? '') == 'Profile')
     @include('partials.profile.profile-info-modal')
     @include('partials.profile.profile-address-modal')
     @endif

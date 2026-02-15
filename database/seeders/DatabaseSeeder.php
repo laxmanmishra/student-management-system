@@ -23,16 +23,21 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Test User',
                 'password' => Hash::make('123456'),
-                'role' => 'student'
+                'role' => 'student',
             ]
         );
 
-        //$this->call(AdminSeeder::class); //for single
+        // $this->call(AdminSeeder::class); //for single
 
         $this->call([
             AdminSeeder::class,
             TeacherSeeder::class,
             StudentSeeder::class,
+            AcademicSeeder::class,
+            AttendanceSeeder::class,
+            ExaminationSeeder::class,
+            FeeSeeder::class,
+            NotificationSeeder::class,
         ]);
 
     }

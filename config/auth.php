@@ -75,6 +75,24 @@ return [
             'model' => App\Models\Admin::class,
         ],
 
+        // 'openai' => [
+        //     'driver' => 'openai',
+        //     'key' => env('OPENAI_API_KEY'),
+        //     'url' => env('OPENAI_BASE_URL'),
+        // ],
+
+        // 'anthropic' => [
+        //     'driver' => 'anthropic',
+        //     'key' => env('ANTHROPIC_API_KEY'),
+        //     'url' => env('ANTHROPIC_BASE_URL'),
+        // ],
+
+        // 'ollama' => [
+        //     'driver' => 'ollama',
+        //     'key' => env('OLLAMA_API_KEY'),
+        //     'url' => env('OLLAMA_BASE_URL'),
+        // ],
+
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',

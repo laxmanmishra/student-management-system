@@ -6,8 +6,7 @@
     class="flex grow flex-col items-center justify-between lg:flex-row lg:px-6"
   >
     <div
-      class="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4 dark:border-gray-800"
-    >
+      class="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4 dark:border-gray-800">
       <!-- Hamburger Toggle BTN -->
       <button
         :class="sidebarToggle ? 'lg:bg-transparent dark:lg:bg-transparent bg-gray-100 dark:bg-gray-800' : ''"
@@ -100,8 +99,8 @@
       </button>
       <!-- Application nav menu button -->
 
-      <div class="hidden lg:block">
-        <form>
+      <div class="hidden lg:block" x-data="searchComponent()" @click.outside="showResults = false" @keydown.escape.window="showResults = false">
+        <form @submit.prevent>
           <div class="relative">
             <span class="absolute top-1/2 left-4 -translate-y-1/2">
               <svg
@@ -122,21 +121,121 @@
             </span>
             <input
               type="text"
-              placeholder="Search or type command..."
+              placeholder="Search students, teachers..."
               id="search-input"
-              class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pr-14 pl-12 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden xl:w-[430px] dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30"
+              x-model="query"
+              @input.debounce.300ms="search()"
+              @focus="if(results.length > 0) showResults = true"
+              @keydown.arrow-down.prevent="navigateDown()"
+              @keydown.arrow-up.prevent="navigateUp()"
+              @keydown.enter.prevent="selectResult()"
+              class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pr-14 pl-12 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden xl:w-[530px] dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30"
             />
+
+            <div x-show="loading" class="absolute top-1/2 right-14 -translate-y-1/2">
+              <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
 
             <button
               id="search-button"
+              type="button"
               class="absolute top-1/2 right-2.5 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
             >
               <span> ⌘ </span>
               <span> K </span>
             </button>
+
+            <div
+              x-show="showResults && results.length > 0"
+              x-transition
+              class="absolute top-full left-0 right-0 mt-2 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 overflow-hidden z-50"
+            >
+              <ul class="max-h-80 overflow-y-auto">
+                <template x-for="(result, index) in results" :key="result.id">
+                  <li>
+                    <a
+                      :href="result.url"
+                      class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      :class="{ 'bg-gray-50 dark:bg-gray-700': selectedIndex === index }"
+                      @mouseenter="selectedIndex = index"
+                    >
+                      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/30">
+                        <span class="text-sm font-semibold text-brand-600 dark:text-brand-400" x-text="result.name.substring(0, 2).toUpperCase()"></span>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 dark:text-white truncate" x-text="result.name"></p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="result.email"></p>
+                      </div>
+                      <span class="text-xs text-gray-400 dark:text-gray-500 capitalize" x-text="result.type"></span>
+                    </a>
+                  </li>
+                </template>
+              </ul>
+            </div>
+
+            <div
+              x-show="showResults && results.length === 0 && query.length >= 2 && !loading"
+              class="absolute top-full left-0 right-0 mt-2 rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 p-4 z-50"
+            >
+              <p class="text-sm text-gray-500 dark:text-gray-400 text-center">No results found for "<span x-text="query"></span>"</p>
+            </div>
           </div>
         </form>
       </div>
+
+      <script>
+        function searchComponent() {
+          return {
+            query: '',
+            results: [],
+            showResults: false,
+            loading: false,
+            selectedIndex: -1,
+
+            async search() {
+              if (this.query.length < 2) {
+                this.results = [];
+                this.showResults = false;
+                return;
+              }
+
+              this.loading = true;
+              try {
+                const response = await fetch(`{{ route('search') }}?q=${encodeURIComponent(this.query)}`);
+                const data = await response.json();
+                this.results = data.results;
+                this.showResults = true;
+                this.selectedIndex = -1;
+              } catch (error) {
+                console.error('Search error:', error);
+              } finally {
+                this.loading = false;
+              }
+            },
+
+            navigateDown() {
+              if (this.selectedIndex < this.results.length - 1) {
+                this.selectedIndex++;
+              }
+            },
+
+            navigateUp() {
+              if (this.selectedIndex > 0) {
+                this.selectedIndex--;
+              }
+            },
+
+            selectResult() {
+              if (this.selectedIndex >= 0 && this.results[this.selectedIndex]) {
+                window.location.href = this.results[this.selectedIndex].url;
+              }
+            }
+          }
+        }
+      </script>
     </div>
 
     <div
