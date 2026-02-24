@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Scout\Searchable;
@@ -24,6 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'first_name',
         'last_name',
         'bio',
@@ -64,7 +67,25 @@ class User extends Authenticatable
         ];
     }
 
-    public function toSearchableArray()
+    /** @return HasMany<SchoolClass> */
+    public function assignedClasses(): HasMany
+    {
+        return $this->hasMany(SchoolClass::class, 'class_teacher_id');
+    }
+
+    /** @return BelongsToMany<Subject> */
+    public function subjectsTaught(): BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class, 'subject_teacher')->withTimestamps();
+    }
+
+    /** @return HasMany<Attendance> */
+    public function markedAttendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'marked_by');
+    }
+
+    public function toSearchableArray(): array
     {
         return [
             'id' => $this->id,

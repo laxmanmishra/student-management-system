@@ -7,22 +7,13 @@
     :class="sidebarToggle ? 'justify-center' : 'justify-between'"
     class="flex items-center gap-2 pt-8 sidebar-header pb-7"
   >
-    <a href="index.html">
-      <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
-        <img class="dark:hidden" src="{{ asset('assets/images/logo/logo.svg') }}" alt="Logo" />
-        <img
-          class="hidden dark:block"
-          src="{{ asset('assets/images/logo/logo-dark.svg') }}"
-          alt="Logo"
-        />
+    <a href="@if(Auth::guard('admin')->check()){{ route('admin') }}@elseif(Auth::check() && Auth::user()->role === 'teacher'){{ route('teacher.dashboard') }}@else{{ route('student.dashboard') }}@endif" class="flex items-center gap-2.5">
+      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-base shadow-md">
+        S
+      </div>
+      <span :class="sidebarToggle ? 'hidden' : 'block'" class="text-lg font-bold text-gray-900 dark:text-white">
+        StudentHub
       </span>
-
-      <img
-        class="logo-icon"
-        :class="sidebarToggle ? 'lg:block' : 'hidden'"
-        src="{{ asset('assets/images/logo/logo-icon.svg') }}"
-        alt="Logo"
-      />
     </a>
   </div>
   <!-- SIDEBAR HEADER -->
@@ -381,177 +372,129 @@
 
           {{-- ========== TEACHER ONLY MENU ITEMS ========== --}}
           @if (!$isAdmin && $role === 'teacher')
-          <!-- Menu Item Attendance -->
+
+          <!-- Teacher: Attendance -->
           <li>
-            <a
-              href="#"
-              @click.prevent="selected = (selected === 'Attendance' ? '':'Attendance')"
-              class="menu-item group"
-              :class="(selected === 'Attendance') ? 'menu-item-active' : 'menu-item-inactive'"
-            >
-              <svg
-                :class="(selected === 'Attendance') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z"
-                  fill=""
-                />
+            <a href="#" @click.prevent="selected = (selected === 'Attendance' ? '':'Attendance')"
+               class="menu-item group" :class="(selected === 'Attendance') ? 'menu-item-active' : 'menu-item-inactive'">
+              <svg :class="(selected === 'Attendance') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill=""/>
               </svg>
               <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Attendance</span>
-            </a>
-          </li>
-          <!-- Menu Item Attendance -->
-
-          <!-- Menu Item Marks -->
-          <li>
-            <a
-              href="#"
-              @click.prevent="selected = (selected === 'Marks' ? '':'Marks')"
-              class="menu-item group"
-              :class="(selected === 'Marks') ? 'menu-item-active' : 'menu-item-inactive'"
-            >
-              <svg
-                :class="(selected === 'Marks') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H18.5001C19.7427 20.75 20.7501 19.7426 20.7501 18.5V5.5C20.7501 4.25736 19.7427 3.25 18.5001 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H18.5001C18.9143 4.75 19.2501 5.08579 19.2501 5.5V18.5C19.2501 18.9142 18.9143 19.25 18.5001 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V5.5ZM6.25005 9.7143C6.25005 9.30008 6.58583 8.9643 7.00005 8.9643L17 8.96429C17.4143 8.96429 17.75 9.30008 17.75 9.71429C17.75 10.1285 17.4143 10.4643 17 10.4643L7.00005 10.4643C6.58583 10.4643 6.25005 10.1285 6.25005 9.7143ZM6.25005 14.2857C6.25005 13.8715 6.58583 13.5357 7.00005 13.5357H17C17.4143 13.5357 17.75 13.8715 17.75 14.2857C17.75 14.6999 17.4143 15.0357 17 15.0357H7.00005C6.58583 15.0357 6.25005 14.6999 6.25005 14.2857Z"
-                  fill=""
-                />
+              <svg class="menu-item-arrow" :class="[(selected === 'Attendance') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'lg:hidden' : '']" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Marks</span>
             </a>
+            <div class="overflow-hidden transform translate" :class="(selected === 'Attendance') ? 'block' : 'hidden'">
+              <ul :class="sidebarToggle ? 'lg:hidden' : 'flex'" class="flex flex-col gap-1 mt-2 menu-dropdown pl-9">
+                <li><a href="{{ route('teacher.attendance.index') }}" class="menu-dropdown-item group {{ request()->routeIs('teacher.attendance.index') || request()->routeIs('teacher.attendance.edit') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">View Records</a></li>
+                <li><a href="{{ route('teacher.attendance.create') }}" class="menu-dropdown-item group {{ request()->routeIs('teacher.attendance.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Mark Attendance</a></li>
+                <li><a href="{{ route('teacher.attendance.report') }}" class="menu-dropdown-item group {{ request()->routeIs('teacher.attendance.report') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Monthly Report</a></li>
+              </ul>
+            </div>
           </li>
-          <!-- Menu Item Marks -->
 
-          <!-- Menu Item Class Reports -->
+          <!-- Teacher: Examination -->
           <li>
-            <a
-              href="#"
-              @click.prevent="selected = (selected === 'ClassReports' ? '':'ClassReports')"
-              class="menu-item group"
-              :class="(selected === 'ClassReports') ? 'menu-item-active' : 'menu-item-inactive'"
-            >
-              <svg
-                :class="(selected === 'ClassReports') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M3.25 5.5C3.25 4.25736 4.25736 3.25 5.5 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V18.5C20.75 19.7426 19.7426 20.75 18.5 20.75H5.5C4.25736 20.75 3.25 19.7426 3.25 18.5V5.5ZM5.5 4.75C5.08579 4.75 4.75 5.08579 4.75 5.5V18.5C4.75 18.9142 5.08579 19.25 5.5 19.25H18.5C18.9142 19.25 19.25 18.9142 19.25 18.5V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H5.5ZM8 17V10H10V17H8ZM11 17V7H13V17H11ZM14 17V13H16V17H14Z"
-                  fill=""
-                />
+            <a href="#" @click.prevent="selected = (selected === 'TeacherExam' ? '':'TeacherExam')"
+               class="menu-item group" :class="(selected === 'TeacherExam') ? 'menu-item-active' : 'menu-item-inactive'">
+              <svg :class="(selected === 'TeacherExam') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H18.5001C19.7427 20.75 20.7501 19.7426 20.7501 18.5V5.5C20.7501 4.25736 19.7427 3.25 18.5001 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H18.5001C18.9143 4.75 19.2501 5.08579 19.2501 5.5V18.5C19.2501 18.9142 18.9143 19.25 18.5001 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V5.5ZM6.25005 9.7143C6.25005 9.30008 6.58583 8.9643 7.00005 8.9643L17 8.96429C17.4143 8.96429 17.75 9.30008 17.75 9.71429C17.75 10.1285 17.4143 10.4643 17 10.4643L7.00005 10.4643C6.58583 10.4643 6.25005 10.1285 6.25005 9.7143ZM6.25005 14.2857C6.25005 13.8715 6.58583 13.5357 7.00005 13.5357H17C17.4143 13.5357 17.75 13.8715 17.75 14.2857C17.75 14.6999 17.4143 15.0357 17 15.0357H7.00005C6.58583 15.0357 6.25005 14.6999 6.25005 14.2857Z" fill=""/>
               </svg>
-              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Class Reports</span>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Examination</span>
+              <svg class="menu-item-arrow" :class="[(selected === 'TeacherExam') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'lg:hidden' : '']" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <div class="overflow-hidden transform translate" :class="(selected === 'TeacherExam') ? 'block' : 'hidden'">
+              <ul :class="sidebarToggle ? 'lg:hidden' : 'flex'" class="flex flex-col gap-1 mt-2 menu-dropdown pl-9">
+                <li><a href="{{ route('teacher.examinations.index') }}" class="menu-dropdown-item group {{ request()->routeIs('teacher.examinations.index') || request()->routeIs('teacher.examinations.show') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">View Exams</a></li>
+                <li><a href="{{ route('teacher.examinations.create') }}" class="menu-dropdown-item group {{ request()->routeIs('teacher.examinations.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Schedule Exam</a></li>
+              </ul>
+            </div>
+          </li>
+
+          <!-- Teacher: Fee Records -->
+          <li>
+            <a href="{{ route('teacher.fees.index') }}"
+               class="menu-item group {{ request()->routeIs('teacher.fees.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+              <svg class="{{ request()->routeIs('teacher.fees.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C12.4142 2 12.75 2.33579 12.75 2.75V4.03078C15.5686 4.37932 17.75 6.81126 17.75 9.75V10.25C17.75 10.6642 17.4142 11 17 11C16.5858 11 16.25 10.6642 16.25 10.25V9.75C16.25 7.40279 14.3472 5.5 12 5.5C9.65279 5.5 7.75 7.40279 7.75 9.75V14.25C7.75 16.5972 9.65279 18.5 12 18.5C14.3472 18.5 16.25 16.5972 16.25 14.25V13.75C16.25 13.3358 16.5858 13 17 13C17.4142 13 17.75 13.3358 17.75 13.75V14.25C17.75 17.1887 15.5686 19.6207 12.75 19.9692V21.25C12.75 21.6642 12.4142 22 12 22C11.5858 22 11.25 21.6642 11.25 21.25V19.9692C8.43139 19.6207 6.25 17.1887 6.25 14.25V9.75C6.25 6.81126 8.43139 4.37932 11.25 4.03078V2.75C11.25 2.33579 11.5858 2 12 2Z" fill=""/>
+              </svg>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Fee Records</span>
             </a>
           </li>
-          <!-- Menu Item Class Reports -->
+
+          <!-- Teacher: Notifications -->
+          <li>
+            <a href="#" @click.prevent="selected = (selected === 'TeacherNotif' ? '':'TeacherNotif')"
+               class="menu-item group" :class="(selected === 'TeacherNotif') ? 'menu-item-active' : 'menu-item-inactive'">
+              <svg :class="(selected === 'TeacherNotif') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C8.68629 2 6 4.68629 6 8V9.58579L4.29289 11.2929C4.10536 11.4804 4 11.7348 4 12V15C4 15.5523 4.44772 16 5 16H8.17071C8.58254 17.1652 9.69378 18 11 18H13C14.3062 18 15.4175 17.1652 15.8293 16H19C19.5523 16 20 15.5523 20 15V12C20 11.7348 19.8946 11.4804 19.7071 11.2929L18 9.58579V8C18 4.68629 15.3137 2 12 2ZM14 16H10C9.44772 16 9 15.5523 9 15V14H15V15C15 15.5523 14.5523 16 14 16ZM16 12V8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8V12L6.41421 13.5858L6 14H18L17.5858 13.5858L16 12ZM12 20C10.8954 20 10 20.8954 10 22H14C14 20.8954 13.1046 20 12 20Z" fill=""/>
+              </svg>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Notifications</span>
+              <svg class="menu-item-arrow" :class="[(selected === 'TeacherNotif') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'lg:hidden' : '']" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <div class="overflow-hidden transform translate" :class="(selected === 'TeacherNotif') ? 'block' : 'hidden'">
+              <ul :class="sidebarToggle ? 'lg:hidden' : 'flex'" class="flex flex-col gap-1 mt-2 menu-dropdown pl-9">
+                <li><a href="{{ route('teacher.notifications.index') }}" class="menu-dropdown-item group {{ request()->routeIs('teacher.notifications.index') || request()->routeIs('teacher.notifications.show') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Inbox</a></li>
+                <li><a href="{{ route('teacher.notifications.create') }}" class="menu-dropdown-item group {{ request()->routeIs('teacher.notifications.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Send Notice</a></li>
+              </ul>
+            </div>
+          </li>
+
           @endif
           {{-- ========== END TEACHER ONLY ========== --}}
 
           {{-- ========== STUDENT ONLY MENU ITEMS ========== --}}
           @if (!$isAdmin && $role === 'student')
-          <!-- Menu Item Attendance -->
+
+          <!-- Student: Attendance -->
           <li>
-            <a
-              href="#"
-              @click.prevent="selected = (selected === 'MyAttendance' ? '':'MyAttendance')"
-              class="menu-item group"
-              :class="(selected === 'MyAttendance') ? 'menu-item-active' : 'menu-item-inactive'"
-            >
-              <svg
-                :class="(selected === 'MyAttendance') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z"
-                  fill=""
-                />
+            <a href="{{ route('student.attendance.index') }}"
+               class="menu-item group {{ request()->routeIs('student.attendance.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+              <svg class="{{ request()->routeIs('student.attendance.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z" fill=""/>
               </svg>
-              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Attendance</span>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">My Attendance</span>
             </a>
           </li>
-          <!-- Menu Item Attendance -->
 
-          <!-- Menu Item Results -->
+          <!-- Student: Examinations -->
           <li>
-            <a
-              href="#"
-              @click.prevent="selected = (selected === 'Results' ? '':'Results')"
-              class="menu-item group"
-              :class="(selected === 'Results') ? 'menu-item-active' : 'menu-item-inactive'"
-            >
-              <svg
-                :class="(selected === 'Results') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M3.25 5.5C3.25 4.25736 4.25736 3.25 5.5 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V18.5C20.75 19.7426 19.7426 20.75 18.5 20.75H5.5C4.25736 20.75 3.25 19.7426 3.25 18.5V5.5ZM5.5 4.75C5.08579 4.75 4.75 5.08579 4.75 5.5V18.5C4.75 18.9142 5.08579 19.25 5.5 19.25H18.5C18.9142 19.25 19.25 18.9142 19.25 18.5V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H5.5ZM8 17V10H10V17H8ZM11 17V7H13V17H11ZM14 17V13H16V17H14Z"
-                  fill=""
-                />
+            <a href="{{ route('student.examinations.index') }}"
+               class="menu-item group {{ request()->routeIs('student.examinations.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+              <svg class="{{ request()->routeIs('student.examinations.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H18.5001C19.7427 20.75 20.7501 19.7426 20.7501 18.5V5.5C20.7501 4.25736 19.7427 3.25 18.5001 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H18.5001C18.9143 4.75 19.2501 5.08579 19.2501 5.5V18.5C19.2501 18.9142 18.9143 19.25 18.5001 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V5.5ZM6.25005 9.7143C6.25005 9.30008 6.58583 8.9643 7.00005 8.9643L17 8.96429C17.4143 8.96429 17.75 9.30008 17.75 9.71429C17.75 10.1285 17.4143 10.4643 17 10.4643L7.00005 10.4643C6.58583 10.4643 6.25005 10.1285 6.25005 9.7143ZM6.25005 14.2857C6.25005 13.8715 6.58583 13.5357 7.00005 13.5357H17C17.4143 13.5357 17.75 13.8715 17.75 14.2857C17.75 14.6999 17.4143 15.0357 17 15.0357H7.00005C6.58583 15.0357 6.25005 14.6999 6.25005 14.2857Z" fill=""/>
               </svg>
-              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Results</span>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Exam Schedule</span>
             </a>
           </li>
-          <!-- Menu Item Results -->
 
-          <!-- Menu Item Fee Status -->
+          <!-- Student: Fee Status -->
           <li>
-            <a
-              href="#"
-              @click.prevent="selected = (selected === 'FeeStatus' ? '':'FeeStatus')"
-              class="menu-item group"
-              :class="(selected === 'FeeStatus') ? 'menu-item-active' : 'menu-item-inactive'"
-            >
-              <svg
-                :class="(selected === 'FeeStatus') ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M12 2C12.4142 2 12.75 2.33579 12.75 2.75V4.03078C15.5686 4.37932 17.75 6.81126 17.75 9.75V10.25C17.75 10.6642 17.4142 11 17 11C16.5858 11 16.25 10.6642 16.25 10.25V9.75C16.25 7.40279 14.3472 5.5 12 5.5C9.65279 5.5 7.75 7.40279 7.75 9.75V14.25C7.75 16.5972 9.65279 18.5 12 18.5C14.3472 18.5 16.25 16.5972 16.25 14.25V13.75C16.25 13.3358 16.5858 13 17 13C17.4142 13 17.75 13.3358 17.75 13.75V14.25C17.75 17.1887 15.5686 19.6207 12.75 19.9692V21.25C12.75 21.6642 12.4142 22 12 22C11.5858 22 11.25 21.6642 11.25 21.25V19.9692C8.43139 19.6207 6.25 17.1887 6.25 14.25V9.75C6.25 6.81126 8.43139 4.37932 11.25 4.03078V2.75C11.25 2.33579 11.5858 2 12 2Z"
-                  fill=""
-                />
+            <a href="{{ route('student.fees.index') }}"
+               class="menu-item group {{ request()->routeIs('student.fees.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+              <svg class="{{ request()->routeIs('student.fees.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C12.4142 2 12.75 2.33579 12.75 2.75V4.03078C15.5686 4.37932 17.75 6.81126 17.75 9.75V10.25C17.75 10.6642 17.4142 11 17 11C16.5858 11 16.25 10.6642 16.25 10.25V9.75C16.25 7.40279 14.3472 5.5 12 5.5C9.65279 5.5 7.75 7.40279 7.75 9.75V14.25C7.75 16.5972 9.65279 18.5 12 18.5C14.3472 18.5 16.25 16.5972 16.25 14.25V13.75C16.25 13.3358 16.5858 13 17 13C17.4142 13 17.75 13.3358 17.75 13.75V14.25C17.75 17.1887 15.5686 19.6207 12.75 19.9692V21.25C12.75 21.6642 12.4142 22 12 22C11.5858 22 11.25 21.6642 11.25 21.25V19.9692C8.43139 19.6207 6.25 17.1887 6.25 14.25V9.75C6.25 6.81126 8.43139 4.37932 11.25 4.03078V2.75C11.25 2.33579 11.5858 2 12 2Z" fill=""/>
               </svg>
               <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Fee Status</span>
             </a>
           </li>
-          <!-- Menu Item Fee Status -->
+
+          <!-- Student: Notifications -->
+          <li>
+            <a href="{{ route('student.notifications.index') }}"
+               class="menu-item group {{ request()->routeIs('student.notifications.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+              <svg class="{{ request()->routeIs('student.notifications.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C8.68629 2 6 4.68629 6 8V9.58579L4.29289 11.2929C4.10536 11.4804 4 11.7348 4 12V15C4 15.5523 4.44772 16 5 16H8.17071C8.58254 17.1652 9.69378 18 11 18H13C14.3062 18 15.4175 17.1652 15.8293 16H19C19.5523 16 20 15.5523 20 15V12C20 11.7348 19.8946 11.4804 19.7071 11.2929L18 9.58579V8C18 4.68629 15.3137 2 12 2ZM14 16H10C9.44772 16 9 15.5523 9 15V14H15V15C15 15.5523 14.5523 16 14 16ZM16 12V8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8V12L6.41421 13.5858L6 14H18L17.5858 13.5858L16 12ZM12 20C10.8954 20 10 20.8954 10 22H14C14 20.8954 13.1046 20 12 20Z" fill=""/>
+              </svg>
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">Notifications</span>
+            </a>
+          </li>
+
           @endif
           {{-- ========== END STUDENT ONLY ========== --}}
         </ul>

@@ -66,13 +66,11 @@
       </button>
       <!-- Hamburger Toggle BTN -->
 
-      <a href="index.html" class="lg:hidden">
-        <img class="dark:hidden" src="{{asset('assets/images/logo/logo.svg') }}" alt="Logo" />
-        <img
-          class="hidden dark:block"
-          src="{{asset('assets/images/logo/logo-dark.svg') }}"
-          alt="Logo"
-        />
+      <a href="@if(Auth::guard('admin')->check()){{ route('admin') }}@elseif(Auth::check() && Auth::user()->role === 'teacher'){{ route('teacher.dashboard') }}@else{{ route('student.dashboard') }}@endif" class="flex items-center gap-2 lg:hidden">
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-sm shadow-sm">
+          S
+        </div>
+        <span class="text-base font-bold text-gray-900 dark:text-white">StudentHub</span>
       </a>
 
       <!-- Application nav menu button -->
@@ -280,9 +278,53 @@
         <!-- Dark Mode Toggler -->
 
         <!-- Notification Menu Area -->
+        @php
+            $isAdminGuard  = Auth::guard('admin')->check();
+            $webUser       = Auth::user();
+            $webRole       = $webUser?->role;
+
+            $headerNotifications = collect();
+            $notifViewAllRoute   = '#';
+
+            if ($isAdminGuard) {
+                $headerNotifications = \App\Models\Notification::where('is_active', true)
+                    ->latest()
+                    ->limit(6)
+                    ->get();
+                $notifViewAllRoute = route('admin.notifications.index');
+            } elseif ($webRole === 'teacher') {
+                $headerNotifications = \App\Models\Notification::where('is_active', true)
+                    ->where(function ($q) use ($webUser) {
+                        $q->whereIn('target_audience', ['all', 'teachers'])
+                          ->orWhere('target_user_id', $webUser->id);
+                    })
+                    ->latest()
+                    ->limit(6)
+                    ->get();
+                $notifViewAllRoute = route('teacher.notifications.index');
+            } elseif ($webRole === 'student') {
+                $headerNotifications = \App\Models\Notification::where('is_active', true)
+                    ->where(function ($q) use ($webUser) {
+                        $q->whereIn('target_audience', ['all', 'students'])
+                          ->orWhere('target_user_id', $webUser->id);
+                    })
+                    ->latest()
+                    ->limit(6)
+                    ->get();
+                $notifViewAllRoute = route('student.notifications.index');
+            }
+
+            $typeIcons = [
+                'info'    => ['bg' => 'bg-blue-100 dark:bg-blue-900/30',    'text' => 'text-blue-600 dark:text-blue-400'],
+                'warning' => ['bg' => 'bg-yellow-100 dark:bg-yellow-900/30','text' => 'text-yellow-600 dark:text-yellow-400'],
+                'success' => ['bg' => 'bg-green-100 dark:bg-green-900/30',  'text' => 'text-green-600 dark:text-green-400'],
+                'danger'  => ['bg' => 'bg-red-100 dark:bg-red-900/30',      'text' => 'text-red-600 dark:text-red-400'],
+            ];
+        @endphp
+
         <div
           class="relative"
-          x-data="{ dropdownOpen: false, notifying: true }"
+          x-data="{ dropdownOpen: false, notifying: {{ $headerNotifications->isNotEmpty() ? 'true' : 'false' }} }"
           @click.outside="dropdownOpen = false"
         >
           <button
@@ -319,380 +361,74 @@
             x-show="dropdownOpen"
             class="shadow-theme-lg dark:bg-gray-dark absolute -right-[240px] mt-[17px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:w-[361px] lg:right-0 dark:border-gray-800"
           >
-            <div
-              class="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800"
-            >
-              <h5
-                class="text-lg font-semibold text-gray-800 dark:text-white/90"
-              >
-                Notification
-              </h5>
-
-              <button
-                @click="dropdownOpen = false"
-                class="text-gray-500 dark:text-gray-400"
-              >
-                <svg
-                  class="fill-current"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
-                    fill=""
-                  />
+            <div class="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+              <div class="flex items-center gap-2">
+                <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">Notifications</h5>
+                @if($headerNotifications->isNotEmpty())
+                  <span class="inline-flex items-center justify-center rounded-full bg-brand-500 px-2 py-0.5 text-xs font-semibold text-white">
+                    {{ $headerNotifications->count() }}
+                  </span>
+                @endif
+              </div>
+              <button @click="dropdownOpen = false" class="text-gray-500 dark:text-gray-400">
+                <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z" fill=""/>
                 </svg>
               </button>
             </div>
 
             <ul class="custom-scrollbar flex h-auto flex-col overflow-y-auto">
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+              @forelse ($headerNotifications as $notif)
+                @php
+                  $icon  = $typeIcons[$notif->type] ?? $typeIcons['info'];
+                  $initials = strtoupper(substr($notif->createdBy->name ?? 'S', 0, 2));
+                @endphp
+                <li>
+                  <a
+                    class="flex gap-3 rounded-lg border-b border-gray-100 px-3 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                    href="{{ $notifViewAllRoute }}"
                   >
-                    <img
-                      src="{{asset('assets/images/user/user-02.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Terry Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
+                    <span class="relative z-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full {{ $icon['bg'] }}">
+                      @if($notif->type === 'info')
+                        <svg class="h-5 w-5 {{ $icon['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      @elseif($notif->type === 'warning')
+                        <svg class="h-5 w-5 {{ $icon['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                      @elseif($notif->type === 'success')
+                        <svg class="h-5 w-5 {{ $icon['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      @else
+                        <svg class="h-5 w-5 {{ $icon['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      @endif
                     </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>5 min ago</span>
+                    <span class="block min-w-0 flex-1">
+                      <span class="text-theme-sm mb-1 block font-medium text-gray-800 dark:text-white/90 truncate">
+                        {{ $notif->title }}
+                      </span>
+                      <span class="text-theme-xs block text-gray-500 dark:text-gray-400 line-clamp-2">
+                        {{ $notif->message }}
+                      </span>
+                      <span class="text-theme-xs mt-1.5 flex items-center gap-2 text-gray-400 dark:text-gray-500">
+                        <span class="inline-flex rounded-full px-1.5 py-0.5 text-xs font-medium {{ $icon['bg'] }} {{ $icon['text'] }}">{{ ucfirst($notif->type) }}</span>
+                        <span class="h-1 w-1 rounded-full bg-gray-300"></span>
+                        <span>{{ $notif->created_at->diffForHumans() }}</span>
+                      </span>
                     </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="{{asset('assets/images/user/user-03.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Alena Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>8 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="{{asset('assets/images/user/user-04.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Jocelyn Kenter</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>15 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="{{asset('assets/images/user/user-05.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-error-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Brandon Philips</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>1 hr ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="{{asset('assets/images/user/user-02.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Terry Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>5 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="{{asset('assets/images/user/user-03.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Alena Franci</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>8 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="{{asset('assets/images/user/user-04.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Jocelyn Kenter</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>15 min ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-
-              <li>
-                <a
-                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                  href="#"
-                >
-                  <span
-                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
-                  >
-                    <img
-                      src="{{asset('assets/images/user/user-05.jpg') }}"
-                      alt="User"
-                      class="overflow-hidden rounded-full"
-                    />
-                    <span
-                      class="bg-error-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-                    ></span>
-                  </span>
-
-                  <span class="block">
-                    <span
-                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
-                    >
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Brandon Philips</span
-                      >
-                      requests permission to change
-                      <span class="font-medium text-gray-800 dark:text-white/90"
-                        >Project - Nganter App</span
-                      >
-                    </span>
-
-                    <span
-                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                    >
-                      <span>Project</span>
-                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                      <span>1 hr ago</span>
-                    </span>
-                  </span>
-                </a>
-              </li>
+                  </a>
+                </li>
+              @empty
+                <li class="flex flex-col items-center justify-center py-10 text-center">
+                  <svg class="mb-3 h-10 w-10 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                  </svg>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">No notifications</p>
+                </li>
+              @endforelse
             </ul>
 
             <a
-              href="#"
+              href="{{ $notifViewAllRoute }}"
               class="text-theme-sm shadow-theme-xs mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
             >
-              View All Notification
+              View All Notifications
             </a>
           </div>
           <!-- Dropdown End -->
@@ -715,7 +451,13 @@
             <img src="{{asset('assets/images/user/owner.jpg') }}" alt="User" />
           </span>
 
-          <span class="text-theme-sm mr-1 block font-medium"> {{ Auth::user()->first_name }} </span>
+          <span class="text-theme-sm mr-1 block font-medium">
+            @if ($isAdminGuard)
+              {{ Auth::guard('admin')->user()->name }}
+            @else
+              {{ $webUser->first_name ?? $webUser->name }}
+            @endif
+          </span>
 
           <svg
             :class="dropdownOpen && 'rotate-180'"
@@ -769,7 +511,7 @@
           >
             <li>
               <a
-                href="{{ route('student.profile') }}"
+                href="@if($isAdminGuard){{ route('admin.profile') }}@elseif($webRole === 'teacher'){{ route('teacher.profile') }}@else{{ route('student.profile') }}@endif"
                 class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
               >
                 <svg

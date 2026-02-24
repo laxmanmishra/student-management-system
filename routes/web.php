@@ -12,7 +12,17 @@ use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Student\AttendanceController as StudentAttendanceController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\ExaminationController as StudentExaminationController;
+use App\Http\Controllers\Student\FeeController as StudentFeeController;
+use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
+use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
+use App\Http\Controllers\Teacher\ExaminationController as TeacherExaminationController;
+use App\Http\Controllers\Teacher\FeeController as TeacherFeeController;
+use App\Http\Controllers\Teacher\NotificationController as TeacherNotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,6 +38,7 @@ Route::get('/login/search', [LoginController::class, 'search'])
 
 Route::post('/login', [LoginController::class, 'store'])
     ->middleware(['guest', 'guest:admin'])
+    ->middleware('throttle:login')
     ->name('login.store');
 
 Route::get('/admin', [AdminDashboardController::class, 'index'])
@@ -38,7 +49,7 @@ Route::get('/admin/profile', function () {
     return view('admin.profile', ['page' => 'Profile']);
 })->middleware('auth:admin')->name('admin.profile');
 
-Route::get('/teacher', fn () => view('teacher.dashboard', ['page' => 'Teacher Dashboard']))
+Route::get('/teacher', [TeacherDashboardController::class, 'index'])
     ->middleware(['auth', 'role:teacher'])
     ->name('teacher.dashboard');
 
@@ -46,7 +57,32 @@ Route::get('/teacher/profile', function () {
     return view('teacher.profile', ['page' => 'Profile']);
 })->middleware(['auth', 'role:teacher'])->name('teacher.profile');
 
-Route::get('/student', fn () => view('student.dashboard', ['page' => 'Student Dashboard']))
+// Teacher Feature Routes
+Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
+    // Attendance Management
+    Route::get('attendance', [TeacherAttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('attendance/create', [TeacherAttendanceController::class, 'create'])->name('attendance.create');
+    Route::post('attendance', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('attendance/{attendance}/edit', [TeacherAttendanceController::class, 'edit'])->name('attendance.edit');
+    Route::put('attendance/{attendance}', [TeacherAttendanceController::class, 'update'])->name('attendance.update');
+    Route::get('attendance-students', [TeacherAttendanceController::class, 'getStudents'])->name('attendance.students');
+    Route::get('attendance-report', [TeacherAttendanceController::class, 'report'])->name('attendance.report');
+
+    // Examination Management
+    Route::resource('examinations', TeacherExaminationController::class);
+
+    // Fee Records (read-only)
+    Route::get('fees', [TeacherFeeController::class, 'index'])->name('fees.index');
+    Route::get('fees/{fee}', [TeacherFeeController::class, 'show'])->name('fees.show');
+
+    // Notification Management
+    Route::get('notifications', [TeacherNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/create', [TeacherNotificationController::class, 'create'])->name('notifications.create');
+    Route::post('notifications', [TeacherNotificationController::class, 'store'])->name('notifications.store');
+    Route::get('notifications/{notification}', [TeacherNotificationController::class, 'show'])->name('notifications.show');
+});
+
+Route::get('/student', [StudentDashboardController::class, 'index'])
     ->middleware(['auth', 'role:student'])
     ->name('student.dashboard');
 
@@ -55,6 +91,24 @@ Route::get('/student/profile', function () {
 })->middleware(['auth', 'role:student'])->name('student.profile');
 
 Route::put('/student/profile/update', [StudentController::class, 'update'])->name('student.profile.update');
+
+// Student Feature Routes
+Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
+    // Attendance (view only)
+    Route::get('attendance', [StudentAttendanceController::class, 'index'])->name('attendance.index');
+
+    // Examinations (view only)
+    Route::get('examinations', [StudentExaminationController::class, 'index'])->name('examinations.index');
+    Route::get('examinations/{examination}', [StudentExaminationController::class, 'show'])->name('examinations.show');
+
+    // Fees (view only)
+    Route::get('fees', [StudentFeeController::class, 'index'])->name('fees.index');
+    Route::get('fees/{fee}', [StudentFeeController::class, 'show'])->name('fees.show');
+
+    // Notifications (view only)
+    Route::get('notifications', [StudentNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/{notification}', [StudentNotificationController::class, 'show'])->name('notifications.show');
+});
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 

@@ -289,11 +289,14 @@
             <!-- ===== Common Grid Shape Start ===== -->
             <include src="./partials/common-grid-shape.html"></include>
             <div class="flex flex-col items-center max-w-xs">
-              <a href="index.html" class="block mb-4">
-                <img src="{{asset('assets/images/logo/auth-logo.svg')}}" alt="Logo" />
+              <a href="{{ route('home') }}" class="flex flex-col items-center gap-3 mb-6">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-3xl shadow-xl shadow-blue-500/30">
+                  S
+                </div>
+                <span class="text-2xl font-bold text-white">StudentHub</span>
               </a>
               <p class="text-center text-gray-400 dark:text-white/60">
-                Free and Open-Source Tailwind CSS Admin Dashboard Template
+                Streamline your institution — students, teachers, and admins all in one place.
               </p>
             </div>
           </div>
